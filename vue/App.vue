@@ -16,13 +16,13 @@
           v-for="data in resData"
           :key="data.id">
           <div class="modelItem">
-            <input type="checkbox" v-model="test" @click="testchk(data)">
+            <input type="checkbox" v-model="dataMotal" @click="setData(data)">
             <img
             :src="data.img"
             alt="">
           </div>
           <div class="title">
-            <h2>{{ data.title }}</h2>
+            <h3>{{ data.title }}</h3>
           </div>
           <div class="description">
             <h2>{{ data.description }}</h2>
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div id="app" style="display: flex; justify-content: space-around;">
+    <div id="app" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, auto)); justify-content: space-around;">
       <template
         v-for="item in search"
         :key="item.id">
@@ -48,7 +48,7 @@
             </a>
           </div>
           <div class="description">
-            <h2>{{ item.description }}</h2>
+            <h3>{{ item.title }}</h3>
           </div>
         </div>
       </template>
@@ -59,11 +59,6 @@
 </template>
 
 <script>
-
-// イメージ
-// youtubeから取得したデータをmysqlに保存
-// mysqlに保存してあるデータをvueで表示
-// 検索かけて追加もできるように
 import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios'
 
@@ -73,7 +68,6 @@ export default {
     setup() {
         
         // youtubeurl
-        // vは取得したvideoIdを入れる
         const youtubeUrl = 'https://www.youtube.com/watch?v='
 
         const requestYoutube = ref('')
@@ -85,7 +79,8 @@ export default {
         // mysqlに格納用
         let sendData = reactive([])
 
-        let test = reactive([]);
+        // モータルウィンドウ用
+        let dataMotal = reactive([]);
 
         // モーダル制御用
         const showContent = ref(false);
@@ -99,18 +94,14 @@ export default {
           part: "snippet",
           type: "video",
           maxResults: "20", 
-          key: "***"
+          key: "AIzaSyBbRI99KgK6iDdEzeLOp20mwmoGl-sPC4M"
         }
 
         const sendItem = ref('')
 
         // 取得したデータの値を取得
-        const testchk = (a) => {
+        const setData = (a) => {
             sendData.push({ id: a.id, title: a.title, img: a.img, description: a.description, time: a.time })
-        };
-
-        const check = () => {
-            console.log(searchWord);
         };
 
         // フィルタリング処理
@@ -137,14 +128,15 @@ export default {
                   .get('http://localhost:3000/')
                   .then(function (response) {
                       for(let b=0;b<response.data.length;b++){
+                        let entityTitle = response.data[b].title.replace(/&#39;/g, '‘')
+                        let decodeTitle = decodeURIComponent(entityTitle)
                         let tmpData2 = reactive({ id: response.data[b].id,
-                                                  title: response.data[b].title,
+                                                  title: decodeTitle,
                                                   img: response.data[b].img,
                                                   description: response.data[b].description,
                                                   time: response.data[b].time 
                                                 })
                         items[b] = tmpData2
-                        //console.log(response.data.length)
                       }
                   })
                   .catch(function (error) {
@@ -173,13 +165,11 @@ export default {
                                   })
 
                   resData[n] = tmpData
-                  
-
                 }
-                console.log(resData)
               });
         }
 
+        // dbにデータを挿入
         const insertData = () => {
           axios
               .post("http://localhost:3000/insert", sendData)
@@ -198,16 +188,15 @@ export default {
             sendData,
             getData,
             showContent,
-            test,
+            dataMotal,
             params,
             items,
             sendItem,
             search,
-            testchk,
+            setData,
             searchYoutube,
             openModal,
             closeModal,
-            check,
             insertData
         };
     },
