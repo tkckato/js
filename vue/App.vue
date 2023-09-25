@@ -10,28 +10,7 @@
   <main>
 
   <!-- モータルウィンドウ -->
-    <div id="overlay" v-show="showContent">
-      <div id="content">
-        <template
-          v-for="data in resData"
-          :key="data.id">
-          <div class="modelItem">
-            <input type="checkbox" v-model="dataMotal" @click="setData(data)">
-            <img
-            :src="data.img"
-            alt="">
-          </div>
-          <div class="title">
-            <h3>{{ data.title }}</h3>
-          </div>
-          <div class="description">
-            <h2>{{ data.description }}</h2>
-          </div>
-        </template>
-        <p><button @click="insertData">追加</button></p>
-        <p><button @click="closeModal">close</button></p>
-      </div>
-    </div>
+    <mortalWindow ref="childData" :value="resData" />
 
     <div id="app" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, auto)); justify-content: space-around;">
       <template
@@ -58,14 +37,11 @@
 
 </template>
 
-<script>
+
+<script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios'
-
-
-export default {
-    
-    setup() {
+import mortalWindow from './components/mortalWindow.vue'
         
         // youtubeurl
         const youtubeUrl = 'https://www.youtube.com/watch?v='
@@ -76,15 +52,6 @@ export default {
         // youtubeから取得したデータを格納
         let resData = reactive([])
 
-        // mysqlに格納用
-        let sendData = reactive([])
-
-        // モータルウィンドウ用
-        let dataMotal = reactive([]);
-
-        // モーダル制御用
-        const showContent = ref(false);
-
         // dbからのデータ格納
         const items = reactive([]);
         
@@ -94,15 +61,8 @@ export default {
           part: "snippet",
           type: "video",
           maxResults: "20", 
-          key: "AIzaSyBbRI99KgK6iDdEzeLOp20mwmoGl-sPC4M"
+          key: "****"
         }
-
-        const sendItem = ref('')
-
-        // 取得したデータの値を取得
-        const setData = (a) => {
-            sendData.push({ id: a.id, title: a.title, img: a.img, description: a.description, time: a.time })
-        };
 
         // フィルタリング処理
         const search = computed(() => {
@@ -112,18 +72,17 @@ export default {
             
         });
 
+        // 子コンポーネント受け渡し
+        const childData = ref();
+        
         // モーダル表示
         const openModal = () => {
-          showContent.value = true;
-        };
-
-        // モーダル非表示
-        const closeModal = () => {
-          showContent.value = false;
+          // 子コンポーネント側で実行
+          childData.value.childMethod();
         };
 
         // dbからデータ取得
-        const getData = onMounted(() => {
+        onMounted(() => {
             axios
                   .get('http://localhost:3000/')
                   .then(function (response) {
@@ -168,39 +127,6 @@ export default {
                 }
               });
         }
-
-        // dbにデータを挿入
-        const insertData = () => {
-          axios
-              .post("http://localhost:3000/insert", sendData)
-              .then(res => {
-                console.log(res)
-              })
-              .catch(err => {
-                console.log(err)
-              })
-        }
-            
-        return {
-            requestYoutube,
-            searchWord,
-            resData,
-            sendData,
-            getData,
-            showContent,
-            dataMotal,
-            params,
-            items,
-            sendItem,
-            search,
-            setData,
-            searchYoutube,
-            openModal,
-            closeModal,
-            insertData
-        };
-    },
-}
 </script>
 
 <style>
